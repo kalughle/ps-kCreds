@@ -12,7 +12,7 @@ PS> cd C:\Users\Joe\Repos
 ```
 1. Clone the repository
 ```powershell
-PS> git clone git@github.com:kalughle/ps-kCreds.git
+PS> git clone "git@github.com:kalughle/ps-kCreds.git"
 ```
 1. Change to the new directory
 ```
