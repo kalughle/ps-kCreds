@@ -1,9 +1,11 @@
 # kCreds
 This is a PowerShell module used for storing encrypted credentials as text strings in files on your local workstation.
 
+<!-- HOWITWORKS -->
 ## How it Works
 This module uses the native encryption within PowerShell's `ConvertTo-SecureString` and `ConvertFrom-SecureString` commands to encrypt strings using the currently logged in user's token. This prevents any user other than the user that encrypted the password from decrypting it.
 
+<!-- INSTALLATION -->
 ## Installation
 To install this module run the `install.ps1` script provided in the root directory. This will automatically select your user specific powershell module directory and will validate that the path to it exists in your `PSModulePath` environment variable. It then validates the module files exist before copying them to the selected directory.
 1. Change to your repos directory
@@ -20,30 +22,31 @@ PS> cd .\kCreds
 ```
 1. Install the module
 ```powershell
-C:> .\install.ps1
+PS> .\install.ps1
 ```
 
 Additionally, you can use the `-InstallForSystem` switch and the script will install th module to the systems module directory.
 ```powershell
-C:> .\install.ps1 -InstallForSystem
+PS> .\install.ps1 -InstallForSystem
 ```
 
 Fianlly, the `-InstallAtCustomPath` parameter can be used to specify a custom install path as a string.
 ```powershell
-PS C:> .\install.ps1 -InstallAtCustomPath "C:\MyModuleDirectory"
+PS> .\install.ps1 -InstallAtCustomPath "C:\MyModuleDirectory"
 ```
 
 ### Manual Installation (Optional)
-To install this module manually, copy the `.\kCreds` directory and it's files to your preferred PowerShell Module folder. Make sure that the directory you choose has been added to your `PSModulePath` directory. Common install directories in Windows are:
+To install this module manually, copy the `.\kCreds` directory and it's files to your preferred PowerShell Module folder. Make sure that the directory you choose has been added to your `PSModulePath` environment variable. Common install directories in Windows are:
 
 - User: `C:\Users\<username>\Documents\WindowsPowerShell\Modules`
 - System: `C:\Program Files\WindowsPowerShell\Modules`
 
+<!-- EXAMPLES -->
 ## Usage
 This module currently outputs two (2) functions, `Set-kCred` and `Read-kCred`.
 
 ### `Set-kCred`
-Creates a new credential file containing the sername and password provided encrypted with the current users token, then sends the output to a file.
+Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file.
 
 **Example #1:** *Create a new credential file using the name and password provided*
 ```powershell
@@ -82,3 +85,15 @@ PS> Read-kCred -FilePath "C:\Users\<username>\.kcreds\myCredential.kcred" -Passw
 ```powershell
 PS> Read-kCred -FilePath "C:\Users\<username>\.kcreds\myCredential.kcred" -UsernameOnly
 ```
+
+<!-- LICENSE -->
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+<!-- CONTACT -->
+## Contact
+
+Joseph Waddington (*Kalughle*) - kalughle@gmail.com
+
+Project Link: [https://github.com/kalughle/ps-kCreds](https://github.com/kalughle/ps-kCreds)
