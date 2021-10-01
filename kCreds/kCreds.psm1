@@ -1,10 +1,13 @@
+###################################################################################################
+# PRIMARY: Set-kCred                                                                              #
+###################################################################################################
 function Set-kCred {
     <#
     .SYNOPSIS
-    Creates a new credential file containing the sername and password provided encrypted with the current users token, then sends the output to a file.
+    Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file.
 
     .DESCRIPTION
-    Creates a new credential containing the encrypted username and password provided, then sends the output to a file or the pipeline.
+    Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file.
 
     .PARAMETER Username
     Provide the case sensitive username you would like to use for this credential.
@@ -27,6 +30,11 @@ function Set-kCred {
 
     .EXAMPLE
     PS> Set-kCred -Username "User01" -Password "AFanta$ticPa$$w0rd" -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred
+    Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file.
+
+    .EXAMPLE
+    PS> Set-kCred -Username "User01" -Password "AFanta$ticPa$$w0rd" -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred -Delimiter ";"
+    Same as Example #1, but change the delimiter to a semicolon (;)
 
     .LINK
     https://github.com/kalughle/ps-kcreds
@@ -79,6 +87,9 @@ function Set-kCred {
     Write-Output $kCredsFileOk
 }
 
+###################################################################################################
+# PRIMARY: Read-kCred                                                                             #
+###################################################################################################
 function Read-kCred {
     <#
     .SYNOPSIS
@@ -216,6 +227,9 @@ function Read-kCred {
     }
 }
 
+###################################################################################################
+# HELPER FUNCTIONS                                                                                #
+###################################################################################################
 function verifyDirectory {
     param (
         [string]$pathToFile,
