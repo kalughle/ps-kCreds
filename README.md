@@ -2,10 +2,23 @@
 This is a PowerShell module used for storing encrypted credentials as text strings in files on your local workstation.
 
 ## How it Works
-XX
+This module uses the native encryption within PowerShell's `ConvertTo-SecureString` and `ConvertFrom-SecureString` commands to encrypt strings using the currently logged in user's token. This prevents any user other than the user that encrypted the password from decrypting it.
 
 ## Installation
 To install this module run the `install.ps1` script provided in the root directory. This will automatically select your user specific powershell module directory and will validate that the path to it exists in your `PSModulePath` environment variable. It then validates the module files exist before copying them to the selected directory.
+1. Change to your repos directory
+```powershell
+PS> cd C:\Users\Joe\Repos
+```
+1. Clone the repository
+```powershell
+PS> git clone git@github.com:kalughle/ps-kCreds.git
+```
+1. Change to the new directory
+```
+PS> cd .\kCreds
+```
+1. Install the module
 ```powershell
 C:> .\install.ps1
 ```
@@ -27,7 +40,7 @@ To install this module manually, copy the `.\kCreds` directory and it's files to
 - System: `C:\Program Files\WindowsPowerShell\Modules`
 
 ## Usage
-XX
+This module currently outputs two (2) functions, `Set-kCred` and `Read-kCred`.
 
 ### `Set-kCred`
 Creates a new credential file containing the sername and password provided encrypted with the current users token, then sends the output to a file.
