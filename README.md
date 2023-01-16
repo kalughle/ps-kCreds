@@ -26,11 +26,13 @@ PS> .\install.ps1
 ```
 
 Additionally, you can use the `-InstallForSystem` switch and the script will install th module to the systems module directory.
+- *Note: You must be in an elevated prompt to perform this action*
 ```powershell
 PS> .\install.ps1 -InstallForSystem
 ```
 
 Fianlly, the `-InstallAtCustomPath` parameter can be used to specify a custom install path as a string.
+- *Note: You may need to be in an elevated prompt to perform this action*
 ```powershell
 PS> .\install.ps1 -InstallAtCustomPath "C:\MyModuleDirectory"
 ```
@@ -48,14 +50,24 @@ This module currently outputs two (2) functions, `Set-kCred` and `Read-kCred`.
 ### `Set-kCred`
 Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file.
 
-**Example #1:** *Create a new credential file using the name and password provided*
+**Example #1:** *Writes the file to `$env:USERPROFILE/.kcreds/$Username.kcred`*
+```powershell
+PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd"
+```
+
+**Example #2:** *Writes the file to a path specified by the user*
 ```powershell
 PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd" -FilePath "C:\Users\<username>\.kcreds\myCredential.kcred"
 ```
 
-**Example #2:** *Same as Example #1, but change the delimiter to a semicolon (;)*
+**Example #3:** *Same as Example #2, but change the delimiter to a semicolon (;)*
 ```powershell
 PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd" -FilePath "C:\Users\<username>\.kcreds\myCredential.kcred" -Delimiter ";"
+```
+
+**Example #4:** *Writes the hash to the pipeline. Good for if you intend to store it somewhere else*
+```powershell
+PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd" -OutputHash
 ```
 
 ### `Read-kCred`

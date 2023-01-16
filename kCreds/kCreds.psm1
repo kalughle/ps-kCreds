@@ -18,6 +18,9 @@ function Set-kCred {
     .PARAMETER FilePath
     Provide the file path you wish to store this credential to.
 
+    .PARAMETER OutputHash
+    If selected, will output the encrypyerd hash directly to the pipeline rather than writing a file
+
     .PARAMETER Delimiter
     The character to be used to seperate the username and password in the credential. May not be a character contained in the Username or Password
 
@@ -29,12 +32,20 @@ function Set-kCred {
         A string value of the credential file path is output
 
     .EXAMPLE
-    PS> Set-kCred -Username "User01" -Password "AFanta$ticPa$$w0rd" -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred
-    Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file.
+    PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd"
+    Creates a new credential file containing the username and password provided, encrypted with the current users token. Then sends the output to a file located at "$env:USERPROFILE\.kcreds\$Username.kcred"
 
     .EXAMPLE
-    PS> Set-kCred -Username "User01" -Password "AFanta$ticPa$$w0rd" -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred -Delimiter ";"
-    Same as Example #1, but change the delimiter to a semicolon (;)
+    PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd" -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred
+    Same as Example #1, but sends the output to a file location you designate
+
+    .EXAMPLE
+    PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd" -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred -Delimiter ";"
+    Same as Example #2, but change the delimiter to a semicolon (;)
+
+    .EXAMPLE
+    PS> Set-kCred -Username "User01" -Password "AW0nderfu11P@ssw0rd" -OutputHash
+    Writes the hash to the pipeline. Good for if you intend to store it somewhere else
 
     .LINK
     https://github.com/kalughle/ps-kcreds
@@ -44,11 +55,14 @@ function Set-kCred {
         [Parameter(Mandatory=$true,HelpMessage="Provide the case sensitive username you would like to use for this credential.")]
         [string]$Username,
 
-        [Parameter(Mandatory=$true,HelpMessage="Provide the password you wish to use for this credntial.")]
+        [Parameter(Mandatory=$true,HelpMessage="Provide the password you wish to use for this credential.")]
         [string]$Password,
 
-        [Parameter(Mandatory=$true,HelpMessage="Provide the file path you wish to store this credential to.")]
+        [Parameter(HelpMessage="Provide the file path you wish to store this credential to.")]
         [string]$FilePath,
+
+        [Parameter()]
+        [switch]$OutputHash,
 
         [Parameter(HelpMessage="Provide a single character to use as the delimiter")]
         [ValidateLength(1,1)]
@@ -58,16 +72,8 @@ function Set-kCred {
     # Check to make sure the Username or Password does not contain the delimiter
     if ($Username -like "*$Delimiter*" -or $Password -like "*$Delimiter*") {
         Write-Error "Username or Password contains the delimiter character ($Delimiter). Please select a different delimiter."
+        break
     }
-
-    # Replace any forward slashes with back slashes
-    $cleanPath = $FilePath.Replace("/", "\")
-
-    # Verify that the directory provided exists, and create it if not
-    verifyDirectory -pathToFile $cleanPath -create | Out-Null
-
-    # Verify that the file provided exists, and create it if not
-    $kCredsFileOk = verifyFile -pathToFile $cleanPath -create
 
     # Join the username and password in to one string using the selected delimiter
     # Prepend the string with the delimiter used to allow the read function to separate them
@@ -80,11 +86,36 @@ function Set-kCred {
     # string using the current user's token
     $credObject = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'empty', $secureCred
 
-    # Convert the now encrypted password back to a standard string and store it in the designated file
-    $credObject.Password | ConvertFrom-SecureString | Out-File $kCredsFileOk
+    # If OutputHash selected, write the hash of the credential to the pipeline
+    if ($FilePath) {
+        # Replace any forward slashes with back slashes
+        $cleanPath = $FilePath.Replace("/", "\")
 
-    # Write the path of the creds file to the pipeline
-    Write-Output $kCredsFileOk
+        # Verify that the directory provided exists, and create it if not
+        verifyDirectory -pathToFile $cleanPath -create | Out-Null
+
+        # Verify that the file provided exists, and create it if not
+        $kCredsFileOk = verifyFile -pathToFile $cleanPath -create
+
+        $credObject.Password | ConvertFrom-SecureString | Out-File $kCredsFileOk
+        Write-Output $kCredsFileOk
+    }
+    elseif ($OutputHash) {
+        $credObject.Password | ConvertFrom-SecureString | Write-Output
+    }
+    else {
+        # Replace any forward slashes with back slashes
+        $filePath = "$env:USERPROFILE\.kcreds\$Username.kcred"
+
+        # Verify that the directory provided exists, and create it if not
+        verifyDirectory -pathToFile $filePath -create | Out-Null
+
+        # Verify that the file provided exists, and create it if not
+        $kCredsFileOk = verifyFile -pathToFile $filePath -create
+
+        $credObject.Password | ConvertFrom-SecureString | Out-File $kCredsFileOk
+        Write-Output $kCredsFileOk
+    }
 }
 
 ###################################################################################################
@@ -100,6 +131,9 @@ function Read-kCred {
 
     .PARAMETER FilePath
     Provide the file path you wish to read this credential from.
+
+    .PARAMETER FileHash
+    Provide the hashed credential as output from Set-kCred -.
 
     .PARAMETER UsernameOnly
     Output only the username of the credential in System.String format
@@ -137,7 +171,7 @@ function Read-kCred {
 
     Username           Password
     --------           --------
-    User01   AFanta$ticPa$$w0rd
+    User01   AW0nderfu11P@ssw0rd
 
     .EXAMPLE
     Read-kCred -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred -PasswordOnly
@@ -149,7 +183,7 @@ function Read-kCred {
     Read-kCred -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred -PasswordOnly -PasswordAsString
     Return a System.String object containing the password only
 
-    AFanta$ticPa$$w0rd
+    AW0nderfu11P@ssw0rd
 
     .EXAMPLE
     Read-kCred -FilePath $env:USERPROFILE/.kcreds/myCredential.kcred -UsernameOnly
@@ -162,8 +196,11 @@ function Read-kCred {
     #>
 
     param (
-        [Parameter(Mandatory=$true,ValueFromPipeline=$true)]
+        [Parameter()]
         [string]$FilePath,
+
+        [Parameter()]
+        [string]$FileHash,
 
         [switch]$UsernameOnly,
 
@@ -172,58 +209,66 @@ function Read-kCred {
         [switch]$PasswordAsString
     )
 
-    PROCESS {
-        # Replace any forward slashes with back slashes
+    if ($FilePath -ne "") {
+        # Replace any forward slashes with back slashes and pull the content
         $cleanPath = $FilePath.Replace("/", "\")
+        $encryptedContent = Get-Content $cleanPath
+    }
+    elseif ($FileHash -eq "") {
+        $encryptedContent = $FileHash
+    }
+    else {
+        Write-Error "Both FilePath and FileHash are empty. You must provide one of these values"
+        break
+    }
 
-        # Pull the string out of the file and convert it to a secure string using the local users credential
-        try {
-            $secureCred = Get-Content $cleanPath | ConvertTo-SecureString -ErrorAction Stop
-        }
-        catch [System.Security.Cryptography.CryptographicException] {
-            if ($PSItem.Exception.Message.Trim() -eq "Key not valid for use in specified state.") {
-                Write-Warning "Invalid user credential!! This user is not authoried to access this file."
-                return
-            }
-            Write-Host "An Unknown Cryptographic error has occured"
-            Write-Error $PSItem
+    # Pull the string out of the file and convert it to a secure string using the local users credential
+    try {
+        $secureCred = $encryptedContent | ConvertTo-SecureString -ErrorAction Stop
+    }
+    catch [System.Security.Cryptography.CryptographicException] {
+        if ($PSItem.Exception.Message.Trim() -eq "Key not valid for use in specified state.") {
+            Write-Warning "Invalid user token. This user is not authoried to decrypt this data."
             return
         }
-        catch {
-            Write-Host "An Unknown error has occured"
-            $PSItem | Write-Output
-            return
-        }
+        Write-Host "An Unknown Cryptographic error has occured"
+        Write-Error $PSItem
+        return
+    }
+    catch {
+        Write-Host "An Unknown error has occured"
+        $PSItem | Write-Output
+        return
+    }
 
-        # Using the current users token, create a credential object using the secure string provided
-        $credObject = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'empty', $secureCred
+    # Using the current users token, create a credential object using the secure string provided
+    $credObject = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList 'empty', $secureCred
 
-        # The first character of the string is the delimiter, so extract that
-        $delimiter  = $credObject.GetNetworkCredential().password.Substring(0,1)
+    # The first character of the string is the delimiter, so extract that
+    $delimiter  = $credObject.GetNetworkCredential().password.Substring(0,1)
 
-        # Using the local users credentials, extract the password from the credential object and provide it to the pipeline in the format requested
-        if ($UsernameOnly) {
-            $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[0] | Write-Output
-        }
-        elseif ($PasswordOnly) {
-            if ($PasswordAsString) {
-                $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1] | Write-Output
-            }
-            else {
-                $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1] | ConvertTo-SecureString -AsPlainText -Force | Write-Output
-            }
+    # Using the local users credentials, extract the password from the credential object and provide it to the pipeline in the format requested
+    if ($UsernameOnly) {
+        $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[0] | Write-Output
+    }
+    elseif ($PasswordOnly) {
+        if ($PasswordAsString) {
+            $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1] | Write-Output
         }
         else {
-            [PSCustomObject]@{
-                Username = $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[0]
-                Password =  if ($PasswordAsString) {
-                                $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1]
-                            }
-                            else {
-                                $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1] | ConvertTo-SecureString -AsPlainText -Force
-                            }
-            } | Write-Output
+            $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1] | ConvertTo-SecureString -AsPlainText -Force | Write-Output
         }
+    }
+    else {
+        [PSCustomObject]@{
+            Username = $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[0]
+            Password =  if ($PasswordAsString) {
+                            $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1]
+                        }
+                        else {
+                            $credObject.GetNetworkCredential().password.Substring(1).Split($delimiter)[1] | ConvertTo-SecureString -AsPlainText -Force
+                        }
+        } | Write-Output
     }
 }
 
