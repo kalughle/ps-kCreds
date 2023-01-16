@@ -4,9 +4,9 @@ param (
     [switch]$InstallForSystem
 )
 
-### ==============================================================================
+### ============================================================================
 ### Helper Functions
-### ==============================================================================
+### ============================================================================
 function checkModulePathInEnvVar {
     param(
         [string]$targetModulePath
@@ -16,6 +16,15 @@ function checkModulePathInEnvVar {
         if ($checkPath -eq $targetModulePath) {
             return $true
         }
+    }
+}
+
+## ===== VALIDATE ELEVATED IF InstallForSystem SELECTED ========================
+if ($InstallForSystem) {
+    $elevated = (New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if (!$elevated) {
+        Write-Warning "To install for the system, please run in an elevated prompt"
+        break
     }
 }
 
@@ -101,7 +110,7 @@ Write-Host "--------------------------------------------------------------------
 Write-Host "Commands available in the " -NoNewline
 Write-Host $sourceModuleName -NoNewline -ForegroundColor Cyan
 Write-Host " module:"
-Import-Module $sourceModuleName
+Import-Module $sourceModuleName -Force
 Get-Command -Module $sourceModuleName
 Write-Host ""
 Write-Host 'Please run "Get-Help <command name> -Full" for more information on these commands'
